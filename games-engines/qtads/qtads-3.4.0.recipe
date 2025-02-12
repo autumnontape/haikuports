@@ -1,0 +1,87 @@
+SUMMARY="A multimedia-capable TADS 2 and 3 interpreter"
+DESCRIPTION="QTads plays interactive fiction games made with \
+TADS, the Text Adventure Development System. It's fully \
+compatible with TADS 2 and 3 games written for both standard \
+TADS and HTML TADS."
+HOMEPAGE="https://realnc.github.io/qtads/"
+COPYRIGHT="1991-2016 Michael J. Roberts
+	2010-2023 Nikos Chantziaras"
+LICENSE="GNU GPL v3"
+REVISION="1"
+SOURCE_URI="https://github.com/realnc/qtads/releases/download/v$portVersion/qtads-$portVersion-source.tar.xz"
+CHECKSUM_SHA256="3c8f1b47ee42d89753d68e7c804ca3677b0c89a5d765d1fd4f80f9cdc29d3473"
+
+ARCHITECTURES="all !x86_gcc2"
+SECONDARY_ARCHITECTURES="x86"
+
+PROVIDES="
+	qtads$secondaryArchSuffix = $portVersion
+	app:QTads
+	"
+REQUIRES="
+	haiku$secondaryArchSuffix
+	lib:libGL$secondaryArchSuffix
+	lib:libQt5Core$secondaryArchSuffix
+	lib:libQt5Gui$secondaryArchSuffix
+	lib:libQt5Widgets$secondaryArchSuffix
+	lib:libQt5Network$secondaryArchSuffix
+	lib:libSDL2_2.0$secondaryArchSuffix
+	lib:libfluidsynth$secondaryArchSuffix
+	lib:libmpg123$secondaryArchSuffix
+	lib:libvorbis$secondaryArchSuffix
+	lib:libsndfile$secondaryArchSuffix
+	"
+
+BUILD_REQUIRES="
+	haiku${secondaryArchSuffix}_devel
+	devel:libQt5Core$secondaryArchSuffix
+	devel:libQt5Gui$secondaryArchSuffix
+	devel:libQt5Widgets$secondaryArchSuffix
+	devel:libQt5Network$secondaryArchSuffix
+	devel:libSDL2_2.0$secondaryArchSuffix
+	devel:libfluidsynth$secondaryArchSuffix
+	devel:libmpg123$secondaryArchSuffix
+	devel:libvorbis$secondaryArchSuffix
+	devel:libsndfile$secondaryArchSuffix
+	"
+BUILD_PREREQUIRES="
+	cmd:gcc$secondaryArchSuffix
+	cmd:make
+	cmd:pkg_config$secondaryArchSuffix
+	cmd:qmake$secondaryArchSuffix >= 5
+	"
+
+PATCHES="auto-update-never-by-default.patch"
+
+ADDITIONAL_FILES="qtads.rdef.in"
+
+defineDebugInfoPackage qtads$secondaryArchSuffix \
+	$appsDir/QTads
+
+BUILD()
+{
+	qmake qtads.pro
+	make $jobArgs
+}
+
+INSTALL()
+{
+	mkdir -p $appsDir
+	cp qtads $appsDir/QTads
+
+	APP_SIGNATURE="application/x-vnd.qtads"
+	local MAJOR="`echo "$portVersion" | cut -d. -f1`"
+	local MIDDLE="`echo "$portVersion" | cut -d. -f2`"
+	local MINOR="`echo "$portVersion" | cut -d. -f3`"
+	local LONG_INFO="$SUMMARY"
+	sed \
+		-e "s|@APP_SIGNATURE@|$APP_SIGNATURE|" \
+		-e "s|@MAJOR@|$MAJOR|" \
+		-e "s|@MIDDLE@|$MIDDLE|" \
+		-e "s|@MINOR@|$MINOR|" \
+		-e "s|@LONG_INFO@|$LONG_INFO|" \
+		$portDir/additional-files/qtads.rdef.in > qtads.rdef
+
+	addResourcesToBinaries qtads.rdef $appsDir/QTads
+	addAppDeskbarSymlink $appsDir/QTads QTads
+}
